@@ -11,3 +11,8 @@ services:
         value: 8080
       - key: JAVA_OPTS
         value: -Xmx512m -Xms256m
+    buildFilter:
+      paths:
+        - "pom.xml"
+        - "src/**"
+        - "target/**"
