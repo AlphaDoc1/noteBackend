@@ -1,0 +1,14 @@
+.git
+.gitignore
+README.md
+.railwayignore
+railway.json
+nixpacks.toml
+render.yaml
+target/
+!target/*.jar
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.iml
