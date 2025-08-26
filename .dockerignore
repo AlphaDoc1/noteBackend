@@ -1,0 +1,16 @@
+target
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+node_modules
+*.log
+Dockerfile*
+render.yaml
+railway.json
+nixpacks.toml
+Procfile
+system.properties
+**/.DS_Store
+
