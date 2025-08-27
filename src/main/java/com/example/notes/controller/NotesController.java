@@ -3,6 +3,7 @@ package com.example.notes.controller;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.util.IOUtils;
 import com.example.notes.service.NotesService;
+import com.example.notes.service.ActivityLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,9 @@ public class NotesController {
     @Autowired
     private NotesService notesService;
 
+    @Autowired
+    private ActivityLogService activityLogService;
+
     // Upload multiple files (or a folder containing files)
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> uploadNotes(@RequestParam("files") MultipartFile[] files,
@@ -28,7 +32,9 @@ public class NotesController {
                                             @RequestParam(value = "batchUpload", required = false) String batchUpload,
                                             @RequestParam(value = "rootDirName", required = false) String rootDirName,
                                             @RequestParam(value = "paths", required = false) String[] paths,
-                                            @RequestParam(value = "manifest", required = false) String manifest) {
+                                            @RequestParam(value = "manifest", required = false) String manifest,
+                                            javax.servlet.http.HttpServletRequest request,
+                                            @RequestHeader(value = "X-Username", required = false) String usernameHeader) {
         StringBuilder message = new StringBuilder();
         try {
             // Pre-flight duplicate check: if single-file with custom name, or folder root provided
@@ -64,6 +70,8 @@ public class NotesController {
                     message.append("Uploaded: ").append(keyName).append("\n");
                 }
             }
+            String who = usernameHeader != null ? usernameHeader : null;
+            activityLogService.log(request, who, "UPLOAD", "count=" + files.length + (rootDirName != null ? ",rootDir=" + rootDirName : ""));
             return ResponseEntity.ok(message.toString());
         } catch (IOException e) {
             // Return a 400 Bad Request if a file is restricted
@@ -108,7 +116,9 @@ public class NotesController {
     // Download a folder as ZIP file
     @GetMapping("/download-folder")
     public ResponseEntity<byte[]> downloadFolder(@RequestParam(value = "prefix", required = false) String prefix,
-                                               @RequestParam(value = "path", required = false) String path) {
+                                               @RequestParam(value = "path", required = false) String path,
+                                               javax.servlet.http.HttpServletRequest request,
+                                               @RequestHeader(value = "X-Username", required = false) String usernameHeader) {
         try {
             String folderPrefix = prefix != null ? prefix : path;
             if (folderPrefix == null || folderPrefix.trim().isEmpty()) {
@@ -126,6 +136,7 @@ public class NotesController {
             headers.setContentDisposition(ContentDisposition.builder("attachment")
                     .filename(folderPrefix.replace("/", "") + ".zip")
                     .build());
+            activityLogService.log(request, usernameHeader, "DOWNLOAD", "folder=" + folderPrefix);
             return new ResponseEntity<>(zipContent, headers, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,7 +146,9 @@ public class NotesController {
 
     // Alternative endpoint for folder download with path parameter
     @GetMapping("/download-folder/{folderPath}")
-    public ResponseEntity<byte[]> downloadFolderByPath(@PathVariable String folderPath) {
+    public ResponseEntity<byte[]> downloadFolderByPath(@PathVariable String folderPath,
+                                                    javax.servlet.http.HttpServletRequest request,
+                                                    @RequestHeader(value = "X-Username", required = false) String usernameHeader) {
         try {
             String folderPrefix = folderPath;
             // Ensure the prefix ends with '/' for folder structure
@@ -149,6 +162,7 @@ public class NotesController {
             headers.setContentDisposition(ContentDisposition.builder("attachment")
                     .filename(folderPath + ".zip")
                     .build());
+            activityLogService.log(request, usernameHeader, "DOWNLOAD", "folder=" + folderPath);
             return new ResponseEntity<>(zipContent, headers, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
