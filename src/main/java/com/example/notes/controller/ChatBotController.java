@@ -12,7 +12,7 @@ import java.util.*;
 public class ChatBotController {
 
     // Use your provided Gemini API key and URL for the Gemini 2.0 Flash model.
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAthMSiWrPWkzR8XsUApgkQNr8l76QjAX8";
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCMXqZnrDTJIl_1nNLqFQCVkT6Ng1o8IrQ";
 
     @Autowired
     private RestTemplate restTemplate;
